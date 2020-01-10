@@ -12,6 +12,7 @@ import com.microsoft.azure.management.appservice.FunctionApp;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.maven.FTPUploader;
 import com.microsoft.azure.maven.deploytarget.DeployTarget;
+import com.microsoft.azure.maven.utils.AppServiceUtils;
 
 public class FTPArtifactHandlerImpl extends ArtifactHandlerBase {
     private static final String DEFAULT_WEBAPP_ROOT = "/site/wwwroot";
@@ -50,7 +51,7 @@ public class FTPArtifactHandlerImpl extends ArtifactHandlerBase {
 
     protected void uploadDirectoryToFTP(DeployTarget target) throws AzureExecutionException {
         final FTPUploader uploader = getUploader();
-        final PublishingProfile profile = target.getPublishingProfile();
+        final PublishingProfile profile = AppServiceUtils.getPublishingProfileFromDeploymentTarget(target);
         final String serverUrl = profile.ftpUrl().split("/", 2)[0];
 
         uploader.uploadDirectoryWithRetries(serverUrl,

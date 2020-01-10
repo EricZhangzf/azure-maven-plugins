@@ -6,6 +6,7 @@
 
 package com.microsoft.azure.maven.function;
 
+import com.microsoft.azure.PagedList;
 import com.microsoft.azure.common.exceptions.AzureExecutionException;
 import com.microsoft.azure.common.logging.Log;
 import com.microsoft.azure.management.appservice.FunctionApp;
@@ -17,29 +18,27 @@ import com.microsoft.azure.maven.function.configurations.FunctionExtensionVersio
 import com.microsoft.azure.maven.function.configurations.RuntimeConfiguration;
 import com.microsoft.azure.maven.function.utils.FunctionUtils;
 import com.microsoft.azure.maven.utils.AppServiceUtils;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import javax.annotation.Nullable;
-
 import java.io.File;
 import java.util.Map;
 
 public abstract class AbstractFunctionMojo extends AbstractAppServiceMojo {
 
     private static final String JDK_VERSION_ERROR = "Azure Functions only support JDK 8, which is lower than local " +
-            "JDK version %s";
+            "JDK version %s.";
     private static final String FUNCTIONS_WORKER_RUNTIME_NAME = "FUNCTIONS_WORKER_RUNTIME";
     private static final String FUNCTIONS_WORKER_RUNTIME_VALUE = "java";
-    private static final String SET_FUNCTIONS_WORKER_RUNTIME = "Set function worker runtime to java";
+    private static final String SET_FUNCTIONS_WORKER_RUNTIME = "Set function worker runtime to java.";
     private static final String CHANGE_FUNCTIONS_WORKER_RUNTIME = "Function worker runtime doesn't " +
-            "meet the requirement, change it from %s to java";
+            "meet the requirement, change it from %s to java.";
     private static final String FUNCTIONS_EXTENSION_VERSION_NAME = "FUNCTIONS_EXTENSION_VERSION";
     private static final String FUNCTIONS_EXTENSION_VERSION_VALUE = "~3";
     private static final String SET_FUNCTIONS_EXTENSION_VERSION = "Functions extension version " +
-            "isn't configured, setting up the default value";
+            "isn't configured, setting up the default value.";
 
     //region Properties
     /**
@@ -151,15 +150,8 @@ public abstract class AbstractFunctionMojo extends AbstractAppServiceMojo {
 
     @Nullable
     public FunctionApp getFunctionApp() throws AzureAuthFailureException {
-        try {
-            return getAzureClient().appServices().functionApps().getByResourceGroup(getResourceGroup(), getAppName());
-        } catch (AzureAuthFailureException authEx) {
-            throw authEx;
-        } catch (Exception ex) {
-            Log.debug(ex);
-            // Swallow exception for non-existing Azure Functions
-        }
-        return null;
+        final PagedList<FunctionApp> functionList = getAzureClient().appServices().functionApps().list();
+        return AppServiceUtils.findAppServiceInPagedList(functionList, getResourceGroup(), getAppName());
     }
 
     public RuntimeConfiguration getRuntime() {
